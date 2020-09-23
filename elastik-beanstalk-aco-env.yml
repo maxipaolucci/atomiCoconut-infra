@@ -1,0 +1,199 @@
+Parameters:
+  EBAppName:
+    Description: ElasticBeanstalk application name
+    Type: String
+    Default: MyTestApplication
+  EBEnvironmentType:
+    Type: String
+    Description: ElasticBeanstalk environment type
+    AllowedValues:
+      - testing
+      - prod
+    Default: testing
+  EBAppSourceS3BucketName:
+    Type: String
+    Description: Bucket with initial app-sources to deploy in the EB environment
+    Default: atomicoconut
+  EBAppSourceS3KeyName:
+    Type: String
+    Description: Key in S3 Bucket with initial app-sources to deploy in the EB environment
+    Default: infrastructure/ecs-sample
+  EBKeyPair:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: Keypair for elasticbeanstalk environment to connect to EC2 instances
+    Default: atomiCoconut_keypair
+  CurrencyLayerKey:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/currencylayer/key
+    Description: Access key for currencylayer.com to access the API
+  PusherSecret:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/test/pusher/secret
+    Description: Secret value for Pusher Channels API 
+  PusherKey:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/test/pusher/key
+    Description: Key value for Pusher Channels API 
+  PusherAppId:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/test/pusher/appid
+    Description: AppID value for Pusher Channels API 
+  SessionKey:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /aco/nodesession/key
+    Description: Session key for aCo Node app
+  SessionSecret:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /aco/nodesession/secret
+    Description: Session secret for aCo Node app
+  MailTrapPass:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/mailtrap/pass
+    Description: Mailtrap.io password for aCo app
+  MailTrapUser:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/mailtrap/user
+    Description: Mailtrap.io user for aCo app
+  Database:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/test/atlasdb/connectionstring
+    Description: Connection string for aco atlas mongodb 
+  NodeEnv:
+    Type: String
+    Default: development
+    Description: Node app environment 
+    AllowedValues:
+      - development
+      - production
+
+Resources:
+
+  HTTPSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${EBAppName}-${EBEnvironmentType}-SecurityGroup'
+      GroupDescription: !Sub 'Security Group for elasticbeanstalk environment - ${EBAppName}-${EBEnvironmentType}'
+      SecurityGroupIngress:
+      # - IpProtocol: tcp
+      #   FromPort: 80
+      #   ToPort: 80
+      #   CidrIp: 0.0.0.0/0
+      # - IpProtocol: tcp
+      #   FromPort: 22
+      #   ToPort: 22
+      #   CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIpv6: ::/0
+
+
+  EBApplication:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties: 
+      ApplicationName: !Ref EBAppName
+      Description: This is a test application with eb and cloudformation by maxi
+      
+  EBInitialAppVersion:
+    Type: AWS::ElasticBeanstalk::ApplicationVersion
+    Properties: 
+        ApplicationName: !Ref EBApplication
+        SourceBundle:
+          S3Bucket: !Ref EBAppSourceS3BucketName
+          S3Key: !Join [ '.', [!Ref EBAppSourceS3KeyName, 'zip'] ]
+  
+  EBEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties: 
+        ApplicationName: !Ref EBApplication
+        Description: "AWS Elastic Beanstalk Environment for test application"
+        EnvironmentName: !Join [ '-', [!Ref EBAppName, env, !Ref EBEnvironmentType] ]
+        SolutionStackName: "64bit Amazon Linux 2018.03 v2.22.0 running Multi-container Docker 19.03.6-ce (Generic)"
+        VersionLabel: !Ref EBInitialAppVersion
+        OptionSettings:
+          - Namespace: 'aws:elasticbeanstalk:environment'
+            OptionName: EnvironmentType
+            Value: SingleInstance
+          - Namespace: 'aws:elasticbeanstalk:environment'
+            OptionName: ServiceRole
+            Value: 'arn:aws:iam::782522910439:role/aws-elasticbeanstalk-service-role'
+
+          - Namespace: 'aws:autoscaling:launchconfiguration'
+            OptionName: InstanceType
+            Value: t2.micro
+          - Namespace: 'aws:autoscaling:launchconfiguration'
+            OptionName: EC2KeyName
+            Value: !Ref EBKeyPair
+          - Namespace: 'aws:autoscaling:launchconfiguration'
+            OptionName: IamInstanceProfile
+            Value: aws-elasticbeanstalk-ec2-role
+          - Namespace: 'aws:autoscaling:launchconfiguration'
+            OptionName: SecurityGroups
+            Value: !Ref HTTPSSecurityGroup
+          
+          - Namespace: 'aws:elasticbeanstalk:sns:topics'
+            OptionName: Notification Endpoint
+            Value: 'maxipaolucci@gmail.com'
+          
+          - Namespace: 'aws:elasticbeanstalk:healthreporting:system'
+            OptionName: SystemType
+            Value: enhanced
+
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: CURRENCYLAYER_KEY
+            Value: !Ref CurrencyLayerKey
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: SESSION_DURATION_SECONDS
+            Value: 86400
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: SESSION_KEY
+            Value: !Ref SessionKey
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: SESSION_SECRET
+            Value: !Ref SessionSecret
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: PUSHER_SECRET
+            Value: !Ref PusherSecret
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: PUSHER_APP_ID
+            Value: !Ref PusherAppId
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: PUSHER_CLUSTER
+            Value: ap4
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: PUSHER_KEY
+            Value: !Ref PusherKey
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: PORT
+            Value: 7777
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: MAIL_TRAP_PASS
+            Value: !Ref MailTrapPass
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: MAIL_TRAP_USER
+            Value: !Ref MailTrapUser
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: MAIL_TRAP_PORT
+            Value: 2525
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: MAIL_TRAP_HOST
+            Value: smtp.mailtrap.io
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: DATABASE
+            Value: !Ref Database
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: NODE_ENV
+            Value: !Ref NodeEnv
