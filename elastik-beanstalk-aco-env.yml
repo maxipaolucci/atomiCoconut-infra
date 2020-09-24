@@ -195,5 +195,10 @@ Resources:
             OptionName: DATABASE
             Value: !Ref Database
           - Namespace: 'aws:elasticbeanstalk:application:environment'
+            # this one is for the nodejs backend app
             OptionName: NODE_ENV
             Value: !Ref NodeEnv
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            # This setting will be used to execute some commands defined in ebextensions files in initial sample app
+            OptionName: ENVIRONMENT_TYPE
+            Value: !Ref EBEnvironmentType
