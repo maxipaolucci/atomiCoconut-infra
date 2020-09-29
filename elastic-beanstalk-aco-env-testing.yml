@@ -2,13 +2,10 @@ Parameters:
   EBAppName:
     Description: ElasticBeanstalk application name
     Type: String
-    Default: MyTestApplication
+    Default: atomiCoconutTesting
   EBEnvironmentType:
     Type: String
     Description: ElasticBeanstalk environment type
-    AllowedValues:
-      - testing
-      - prod
     Default: testing
   EBAppSourceS3BucketName:
     Type: String
@@ -71,17 +68,14 @@ Parameters:
     Type: String
     Default: development
     Description: Node app environment 
-    AllowedValues:
-      - development
-      - production
 
 Resources:
 
   HTTPSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub '${EBAppName}-${EBEnvironmentType}-SecurityGroup'
-      GroupDescription: !Sub 'Security Group for elasticbeanstalk environment - ${EBAppName}-${EBEnvironmentType}'
+      GroupName: !Sub '${EBAppName}-SecurityGroup'
+      GroupDescription: !Sub 'Security Group for elasticbeanstalk environment - ${EBAppName}'
       SecurityGroupIngress:
       # - IpProtocol: tcp
       #   FromPort: 80
@@ -120,7 +114,7 @@ Resources:
     Properties: 
         ApplicationName: !Ref EBApplication
         Description: "AWS Elastic Beanstalk Environment for test application"
-        EnvironmentName: !Join [ '-', [!Ref EBAppName, env, !Ref EBEnvironmentType] ]
+        EnvironmentName: !Join [ '-', [!Ref EBAppName, env] ]
         SolutionStackName: "64bit Amazon Linux 2018.03 v2.22.0 running Multi-container Docker 19.03.6-ce (Generic)"
         VersionLabel: !Ref EBInitialAppVersion
         OptionSettings:
@@ -131,9 +125,10 @@ Resources:
             OptionName: ServiceRole
             Value: 'arn:aws:iam::782522910439:role/aws-elasticbeanstalk-service-role'
 
-          - Namespace: 'aws:autoscaling:launchconfiguration'
-            OptionName: InstanceType
+          - Namespace: 'aws:ec2:instances'
+            OptionName: InstanceTypes
             Value: t2.micro
+            
           - Namespace: 'aws:autoscaling:launchconfiguration'
             OptionName: EC2KeyName
             Value: !Ref EBKeyPair

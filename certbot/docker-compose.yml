@@ -1,0 +1,7 @@
+version: '3'
+services:
+  certbot:
+    image: certbot/certbot
+    volumes:
+    - /home/ec2-user/conf:/etc/letsencrypt
+    - /home/ec2-user/www:/var/www/certbot 
