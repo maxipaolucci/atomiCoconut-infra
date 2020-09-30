@@ -5,11 +5,14 @@ if [[ ! -z "$1" ]]; then staging=$1; fi
 echo "### Staging: $staging"
 
 domains=(atomicoconut.com www.atomicoconut.com)
-#this is used to restart the container
-nginxImageTag="latest"
 if [[ "$2" == "testing"  ]]; then
   domains=(testss.atomicoconut.com)
-  nginxImageTag="testing"
+fi
+
+#this is used to restart nginx the container to reload the certs
+nginxImageTag=""
+if [[ ! -z "$2" ]]; then
+	nginxImageTag=$2;
 fi
 
 rsa_key_size=4096
@@ -48,10 +51,11 @@ docker-compose run --rm --entrypoint "\
     --rsa-key-size $rsa_key_size \
     --agree-tos \
     --force-renewal" certbot
+
 echo
+echo
+./reload_nginx.sh $nginxImageTag
 
-echo "### Reloading nginx ..."
-nginx_container_name=$(docker ps | grep atomic-coconut-nginx:$nginxImageTag | awk '{print $NF}')
-echo "NGINX container name: $nginx_container_name"
-
-docker exec $nginx_container_name nginx -s reload
+echo 
+echo
+./start_certbot_renew.sh

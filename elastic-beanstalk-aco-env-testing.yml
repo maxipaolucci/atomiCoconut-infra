@@ -77,14 +77,6 @@ Resources:
       GroupName: !Sub '${EBAppName}-SecurityGroup'
       GroupDescription: !Sub 'Security Group for elasticbeanstalk environment - ${EBAppName}'
       SecurityGroupIngress:
-      # - IpProtocol: tcp
-      #   FromPort: 80
-      #   ToPort: 80
-      #   CidrIp: 0.0.0.0/0
-      # - IpProtocol: tcp
-      #   FromPort: 22
-      #   ToPort: 22
-      #   CidrIp: 0.0.0.0/0
       - IpProtocol: tcp
         FromPort: 443
         ToPort: 443
@@ -197,3 +189,15 @@ Resources:
             # This setting will be used to execute some commands defined in ebextensions files in initial sample app
             OptionName: ENVIRONMENT_TYPE
             Value: !Ref EBEnvironmentType
+
+  R53toEbDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      # this is my hostedzonde_id for atomicoconut.com
+      HostedZoneId: Z3L4DEQAOGGGEK
+      Name: testss.atomicoconut.com
+      Type: A
+      TTL: '900'
+      ResourceRecords:
+        - !GetAtt EBEnvironment.EndpointURL
+  

@@ -2,7 +2,7 @@
 
 # capture environment parameter if present
 environment="" # Set to "testing" if you're in testing env
-nginxImageTag=""
+nginxImageTag="" # this is used to restart the nginx container to reload the certs
 if [[ ! -z "$1" ]]; then
 	environment="-$1";
 	nginxImageTag=$1;
@@ -25,3 +25,8 @@ rm certbot-certs-$2.tar.gz
 echo
 echo
 ./reload_nginx.sh $nginxImageTag
+
+echo 
+echo
+./start_certbot_renew.sh
+
