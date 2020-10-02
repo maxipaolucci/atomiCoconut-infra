@@ -2,11 +2,14 @@ Parameters:
   EBAppName:
     Description: ElasticBeanstalk application name
     Type: String
-    Default: atomiCoconutTesting
+    Default: atomiCoconut
   EBEnvironmentType:
     Type: String
     Description: ElasticBeanstalk environment type
     Default: testing
+    AllowedValues:
+      - testing
+      - production
   EBAppSourceS3BucketName:
     Type: String
     Description: Bucket with initial app-sources to deploy in the EB environment
@@ -21,53 +24,52 @@ Parameters:
     Default: atomiCoconut_keypair
   CurrencyLayerKey:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /maxipaolucci/currencylayer/key
     Description: Access key for currencylayer.com to access the API
   PusherSecret:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /maxipaolucci/aco/test/pusher/secret
     Description: Secret value for Pusher Channels API 
   PusherKey:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /maxipaolucci/aco/test/pusher/key
     Description: Key value for Pusher Channels API 
   PusherAppId:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /maxipaolucci/aco/test/pusher/appid
     Description: AppID value for Pusher Channels API 
   SessionKey:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /aco/nodesession/key
     Description: Session key for aCo Node app
   SessionSecret:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /aco/nodesession/secret
     Description: Session secret for aCo Node app
   MailTrapPass:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /maxipaolucci/aco/mailtrap/pass
     Description: Mailtrap.io password for aCo app
   MailTrapUser:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /maxipaolucci/aco/mailtrap/user
     Description: Mailtrap.io user for aCo app
   Database:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    NoEcho: true
+    # NoEcho: true
     Default: /maxipaolucci/aco/test/atlasdb/connectionstring
-    Description: Connection string for aco atlas mongodb 
-  NodeEnv:
-    Type: String
-    Default: development
-    Description: Node app environment 
+    Description: Connection string for aco atlas mongodb
+
+Conditions: 
+  IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, prod ]
 
 Resources:
 
@@ -90,8 +92,8 @@ Resources:
   EBApplication:
     Type: AWS::ElasticBeanstalk::Application
     Properties: 
-      ApplicationName: !Ref EBAppName
-      Description: This is a test application with eb and cloudformation by maxi
+      ApplicationName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType]]
+      Description: !Sub 'This is the ${EBEnvironmentType} application'
       
   EBInitialAppVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
@@ -105,8 +107,8 @@ Resources:
     Type: AWS::ElasticBeanstalk::Environment
     Properties: 
         ApplicationName: !Ref EBApplication
-        Description: "AWS Elastic Beanstalk Environment for test application"
-        EnvironmentName: !Join [ '-', [!Ref EBAppName, env] ]
+        Description: !Sub 'AWS Elastic Beanstalk Environment for ${EBEnvironmentType}'
+        EnvironmentName: !Join [ '-', [!Ref EBAppName, env, !Ref EBEnvironmentType]]
         SolutionStackName: "64bit Amazon Linux 2018.03 v2.22.0 running Multi-container Docker 19.03.6-ce (Generic)"
         VersionLabel: !Ref EBInitialAppVersion
         OptionSettings:
@@ -168,7 +170,7 @@ Resources:
             Value: 7777
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: MAIL_TRAP_PASS
-            Value: !Ref MailTrapPass
+            Value: !If [IsProdEnvironment, !Ref AWS::NoValue, !Ref MailTrapPass]
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: MAIL_TRAP_USER
             Value: !Ref MailTrapUser
@@ -184,20 +186,26 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             # this one is for the nodejs backend app
             OptionName: NODE_ENV
-            Value: !Ref NodeEnv
+            Value: !If [IsProdEnvironment, 'production', 'development']
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             # This setting will be used to execute some commands defined in ebextensions files in initial sample app
             OptionName: ENVIRONMENT_TYPE
-            Value: !Ref EBEnvironmentType
+            Value: !If [IsProdEnvironment, '', !Ref EBEnvironmentType]
 
   R53toEbDnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
       # this is my hostedzonde_id for atomicoconut.com
       HostedZoneId: Z3L4DEQAOGGGEK
-      Name: testss.atomicoconut.com
+      Name: 
+        !If 
+        - IsProdEnvironment 
+        - atomicoconut.com
+        - !Join
+          - '.' 
+          - [!Join [ '', [!Ref EBEnvironmentType, ss]], atomicoconut.com]
       Type: A
-      TTL: '900'
+      TTL: 3600
       ResourceRecords:
         - !GetAtt EBEnvironment.EndpointURL
   

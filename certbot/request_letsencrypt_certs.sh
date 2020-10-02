@@ -6,7 +6,7 @@ echo "### Staging: $staging"
 
 domains=(atomicoconut.com www.atomicoconut.com)
 if [[ "$2" == "testing"  ]]; then
-  domains=(testss.atomicoconut.com)
+  domains=(testingss.atomicoconut.com)
 fi
 
 #this is used to restart nginx the container to reload the certs
