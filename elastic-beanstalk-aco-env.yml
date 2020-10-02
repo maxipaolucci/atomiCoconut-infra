@@ -24,7 +24,7 @@ Parameters:
     Default: atomiCoconut_keypair
   CurrencyLayerKey:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    # NoEcho: true
+    NoEcho: true
     Default: /maxipaolucci/currencylayer/key
     Description: Access key for currencylayer.com to access the API
   PusherSecret:
@@ -44,22 +44,22 @@ Parameters:
     Description: AppID value for Pusher Channels API 
   SessionKey:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    # NoEcho: true
+    NoEcho: true
     Default: /aco/nodesession/key
     Description: Session key for aCo Node app
   SessionSecret:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    # NoEcho: true
+    NoEcho: true
     Default: /aco/nodesession/secret
     Description: Session secret for aCo Node app
   MailTrapPass:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    # NoEcho: true
+    NoEcho: true
     Default: /maxipaolucci/aco/mailtrap/pass
     Description: Mailtrap.io password for aCo app
   MailTrapUser:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    # NoEcho: true
+    NoEcho: true
     Default: /maxipaolucci/aco/mailtrap/user
     Description: Mailtrap.io user for aCo app
   Database:
@@ -69,15 +69,15 @@ Parameters:
     Description: Connection string for aco atlas mongodb
 
 Conditions: 
-  IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, prod ]
+  IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
 
 Resources:
 
   HTTPSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub '${EBAppName}-SecurityGroup'
-      GroupDescription: !Sub 'Security Group for elasticbeanstalk environment - ${EBAppName}'
+      GroupName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType, 'SecurityGroup']]
+      GroupDescription: !Sub 'Security Group for elasticbeanstalk ${EBEnvironmentType} environment - ${EBAppName}'
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 443
@@ -173,13 +173,13 @@ Resources:
             Value: !If [IsProdEnvironment, !Ref AWS::NoValue, !Ref MailTrapPass]
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: MAIL_TRAP_USER
-            Value: !Ref MailTrapUser
+            Value: !If [IsProdEnvironment, !Ref AWS::NoValue, !Ref MailTrapUser]
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: MAIL_TRAP_PORT
-            Value: 2525
+            Value: !If [IsProdEnvironment, !Ref AWS::NoValue, 2525]
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: MAIL_TRAP_HOST
-            Value: smtp.mailtrap.io
+            Value: !If [IsProdEnvironment, !Ref AWS::NoValue, 'smtp.mailtrap.io']
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: DATABASE
             Value: !Ref Database
