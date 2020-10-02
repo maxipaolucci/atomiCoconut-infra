@@ -67,6 +67,11 @@ Parameters:
     # NoEcho: true
     Default: /maxipaolucci/aco/test/atlasdb/connectionstring
     Description: Connection string for aco atlas mongodb
+  SendgridApiKey:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/sendgrid/apikey
+    Description: Sendgrid API Key for atomiCoconut
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
@@ -189,8 +194,12 @@ Resources:
             Value: !If [IsProdEnvironment, 'production', 'development']
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             # This setting will be used to execute some commands defined in ebextensions files in initial sample app
+            # For production we want to pass an empty value
             OptionName: ENVIRONMENT_TYPE
-            Value: !If [IsProdEnvironment, '', !Ref EBEnvironmentType]
+            Value: !If [IsProdEnvironment, !Ref AWS::NoValue, !Ref EBEnvironmentType]
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: SENDGRID_API_KEY
+            Value: !If [IsProdEnvironment, !Ref SendgridApiKey, !Ref AWS::NoValue]
 
   R53toEbDnsRecord:
     Type: AWS::Route53::RecordSet
