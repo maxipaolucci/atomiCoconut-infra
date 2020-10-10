@@ -9,7 +9,7 @@
 				"collect_list": [
 					{
 						"file_path": "/var/log/containers/server-CONTAINER_ID-stdouterr.log",
-						"log_group_name": "aco-server-container-logs",
+						"log_group_name": "aco-ENVIRONMENT_TYPE-server-container-logs",
 						"log_stream_name": "{instance_id}"
 					}
 				]

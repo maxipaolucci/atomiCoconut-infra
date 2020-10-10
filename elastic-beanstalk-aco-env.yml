@@ -218,3 +218,9 @@ Resources:
       ResourceRecords:
         - !GetAtt EBEnvironment.EndpointURL
   
+  ec2ServerContainerLogGroup: 
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      RetentionInDays: 14
+      Name: !Sub 'aco-${EBEnvironmentType}-server-container-logs'
+  
