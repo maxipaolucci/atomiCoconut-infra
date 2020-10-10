@@ -222,5 +222,5 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties: 
       RetentionInDays: 14
-      Name: !Sub 'aco-${EBEnvironmentType}-server-container-logs'
+      LogGroupName: !Sub 'aco-${EBEnvironmentType}-server-container-logs'
   
