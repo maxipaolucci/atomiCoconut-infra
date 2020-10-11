@@ -28,7 +28,7 @@ sed -i "s?aco-ENVIRONMENT_TYPE?aco-$ENVIRONMENT_TYPE?" cloudWatchAgentConfig-upd
 echo
 
 echo "Setup cloudWatch agent..."
-if [ -f /usr/share/collectd/types.db ]; then
+if [ ! -f /usr/share/collectd/types.db ]; then
   echo "Created file: /usr/share/collectd/types.db required by CloudWatch Agent."
   sudo mkdir -p /usr/share/collectd
   sudo touch /usr/share/collectd/types.db
