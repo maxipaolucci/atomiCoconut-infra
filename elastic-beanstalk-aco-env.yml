@@ -18,6 +18,10 @@ Parameters:
     Type: String
     Description: Key in S3 Bucket with initial app-sources to deploy in the EB environment
     Default: infrastructure/ecs-sample
+  EBSnsTopicEmail:
+    Type: String
+    Description: Email where to receive notifications regarding ElasticBeanstalk environment
+    Default: maxipaolucci@gmail.com
   EBKeyPair:
     Type: 'AWS::EC2::KeyPair::KeyName'
     Description: Keypair for elasticbeanstalk environment to connect to EC2 instances
@@ -92,8 +96,68 @@ Resources:
         FromPort: 443
         ToPort: 443
         CidrIpv6: ::/0
+  
+  EBServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Join ['-', [ 'aco', !Ref EBEnvironmentType, 'elasticbeanstalk-service-role' ] ]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - elasticbeanstalk.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                'sts:ExternalId': elasticbeanstalk
+      Path: /
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth'
+        - 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService'
 
+  EC2ServiceRoleForEB:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Join ['-', [ 'aco', !Ref EBEnvironmentType, 'elasticbeanstalk-ec2-role' ] ]
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy'
+        - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier'
+        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker'
+        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier'
+      Tags:
+        - Key: 'CLOUDWATCH_AGENT_ADMIN'
+          Value: 'Admin stuff to work with the unified cloudwatch agent'
+        - Key: 'BEANSTALK_WEBTIER'
+          Value: 'Beanstalk web tier permissions'
+        - Key: 'BEANSTALK_MULTI_DOCKER'
+          Value: 'Beanstalk multi docker permissions'
+        - Key: 'S3_FULL_ACCESS'
+          Value: 'S3 Full access role'
 
+  InstanceProfileForEC2ServiceRole:
+          Type: 'AWS::IAM::InstanceProfile'
+          Properties:
+            InstanceProfileName: !Join ['-', [ 'aco', !Ref EBEnvironmentType, 'instance-profile-elasticbeanstalk-ec2-role' ] ]
+            Path: /
+            Roles:
+              - !Ref EC2ServiceRoleForEB
+  
   EBApplication:
     Type: AWS::ElasticBeanstalk::Application
     Properties: 
@@ -107,7 +171,7 @@ Resources:
         SourceBundle:
           S3Bucket: !Ref EBAppSourceS3BucketName
           S3Key: !Join [ '.', [!Ref EBAppSourceS3KeyName, 'zip'] ]
-  
+          
   EBEnvironment:
     Type: AWS::ElasticBeanstalk::Environment
     Properties: 
@@ -122,7 +186,7 @@ Resources:
             Value: SingleInstance
           - Namespace: 'aws:elasticbeanstalk:environment'
             OptionName: ServiceRole
-            Value: 'arn:aws:iam::782522910439:role/aws-elasticbeanstalk-service-role'
+            Value: !Ref EBServiceRole
 
           - Namespace: 'aws:ec2:instances'
             OptionName: InstanceTypes
@@ -133,14 +197,14 @@ Resources:
             Value: !Ref EBKeyPair
           - Namespace: 'aws:autoscaling:launchconfiguration'
             OptionName: IamInstanceProfile
-            Value: aws-elasticbeanstalk-ec2-role
+            Value: !Ref InstanceProfileForEC2ServiceRole
           - Namespace: 'aws:autoscaling:launchconfiguration'
             OptionName: SecurityGroups
             Value: !Ref HTTPSSecurityGroup
           
           - Namespace: 'aws:elasticbeanstalk:sns:topics'
             OptionName: Notification Endpoint
-            Value: 'maxipaolucci@gmail.com'
+            Value: !Ref EBSnsTopicEmail
           
           - Namespace: 'aws:elasticbeanstalk:healthreporting:system'
             OptionName: SystemType
