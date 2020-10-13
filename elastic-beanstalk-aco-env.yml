@@ -289,9 +289,48 @@ Resources:
       ResourceRecords:
         - !GetAtt EBEnvironment.EndpointURL
   
+  # the log group to create in cloudwatch so see the server container logs of the app
   ec2ServerContainerLogGroup: 
     Type: AWS::Logs::LogGroup
     Properties: 
       RetentionInDays: 14
       LogGroupName: !Sub 'aco-${EBEnvironmentType}-server-container-logs'
   
+  # this sns topic is for the cloudwatch alarm on server container errors to send notifications
+  serverErrorsSnsTopic:
+    Type: AWS::SNS::Topic
+    Properties: 
+      Subscription: 
+        - Endpoint: !Ref EBSnsTopicEmail
+          Protocol: email
+      TopicName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType, server, errors, cloudwatch, alarm]]
+  
+  # this is a metric filter created for the server container logs in cloudwatch
+  serverErrorsMetric: 
+    Type: AWS::Logs::MetricFilter
+    Properties: 
+      LogGroupName: !Ref ec2ServerContainerLogGroup
+      FilterPattern: 'errorHandlers'
+      MetricTransformations: 
+        - MetricValue: '1'
+          MetricNamespace: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType]]
+          MetricName: 'ServerErrors'
+  
+  # this setups and alarm for the metrics generated with server container errors
+  serverErrorsMetricAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub 'This is an alarm for the server errors metric in ${EBEnvironmentType} envirnment'
+      AlarmName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType, 'server', 'errors']]
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      # Datapoints to alarm expressed as M out of N. where M is DatapointsToAlarm and N is EvaluationPeriods
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      MetricName: ServerErrors
+      Namespace: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType]]
+      TreatMissingData: notBreaching
+      Period: 300 # 5 min
+      Statistic: Sum
+      Threshold: 6
+      AlarmActions:
+        - !Ref serverErrorsSnsTopic
