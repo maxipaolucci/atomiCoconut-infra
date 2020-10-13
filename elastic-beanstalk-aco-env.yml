@@ -303,7 +303,7 @@ Resources:
       Subscription: 
         - Endpoint: !Ref EBSnsTopicEmail
           Protocol: email
-      TopicName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType, server, errors, cloudwatch, alarm]]
+      TopicName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType, errors, cloudwatch, alarm]]
   
   # this is a metric filter created for the server container logs in cloudwatch
   serverErrorsMetric: 
