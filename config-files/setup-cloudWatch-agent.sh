@@ -2,7 +2,7 @@
 
 echo "Setting up Unified CloudWatch Agent..."
 
-FILE="cloudWatchAgentConfig-updated.json"     
+FILE="/home/ec2-user/cloudWatchAgentConfig-updated.json"     
 if [ -f $FILE ]; then
   echo "$FILE removed."
   rm $FILE
@@ -10,7 +10,7 @@ else
   echo "File $FILE does not exist."
 fi
 
-cp cloudWatchAgentConfig.json cloudWatchAgentConfig-updated.json
+cp cloudWatchAgentConfig.json $FILE
 
 SERVER_CONTAINER_ID=$(docker ps | grep atomic-coconut-server | awk '{print $1}')
 if [[ -z "$SERVER_CONTAINER_ID" ]]; then 
@@ -23,8 +23,8 @@ ENVIRONMENT_TYPE=$(sudo /opt/elasticbeanstalk/bin/get-config environment | jq .E
 if [[ -z "$ENVIRONMENT_TYPE" ]]; then ENVIRONMENT_TYPE=production; fi
 echo "Environment type: $ENVIRONMENT_TYPE"
 
-sed -i "s?server-CONTAINER_ID-stdouterr?server-$SERVER_CONTAINER_ID-stdouterr?" cloudWatchAgentConfig-updated.json
-sed -i "s?aco-ENVIRONMENT_TYPE?aco-$ENVIRONMENT_TYPE?" cloudWatchAgentConfig-updated.json
+sed -i "s?server-CONTAINER_ID-stdouterr?server-$SERVER_CONTAINER_ID-stdouterr?" $FILE
+sed -i "s?aco-ENVIRONMENT_TYPE?aco-$ENVIRONMENT_TYPE?" $FILE
 echo
 
 echo "Setup cloudWatch agent..."
@@ -33,6 +33,6 @@ if [ ! -f /usr/share/collectd/types.db ]; then
   sudo mkdir -p /usr/share/collectd
   sudo touch /usr/share/collectd/types.db
 fi
-sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:cloudWatchAgentConfig-updated.json -s
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:$FILE -s
 
 echo "CloudWatch Agent setup done."

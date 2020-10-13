@@ -163,6 +163,13 @@ Resources:
     Properties: 
       ApplicationName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType]]
       Description: !Sub 'This is the ${EBEnvironmentType} application'
+      # ResourceLifecycleConfig:
+      #   ServiceRole: !Ref EBServiceRole
+      #   VersionLifecycleConfig:
+      #     MaxCountRule:
+      #       DeleteSourceFromS3: true
+      #       Enabled: true
+      #       MaxCount: 100
       
   EBInitialAppVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
