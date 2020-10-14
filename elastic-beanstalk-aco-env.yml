@@ -24,6 +24,7 @@ Parameters:
     Default: maxipaolucci@gmail.com
   EBKeyPair:
     Type: 'AWS::EC2::KeyPair::KeyName'
+    NoEcho: true
     Description: Keypair for elasticbeanstalk environment to connect to EC2 instances
     Default: atomiCoconut_keypair
   CurrencyLayerKey:
