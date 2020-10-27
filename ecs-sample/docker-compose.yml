@@ -1,0 +1,21 @@
+version: '2.4'
+services:
+  php-app:
+    image: "php:fpm"
+    volumes:
+      - "./php-app:/var/www/html:ro"
+      - "${EB_LOG_BASE_DIR}/php-app:/var/log/sample-app"
+    mem_limit: 128m
+    environment:
+      Container: PHP
+  nginx-proxy:
+    image: "nginx"
+    ports:
+      - "80:80"
+    volumes:
+      - "./php-app:/var/www/html:ro"
+      - "./proxy/conf.d:/etc/nginx/conf.d:ro"
+      - "${EB_LOG_BASE_DIR}/nginx-proxy:/var/log/nginx"
+    mem_limit: 128m
+    links:
+      - php-app
