@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # zip the app including .ebext* and .plat* dirs
-cd ecs-sample; zip -r ../ecs-sample.zip * .ebext* .plat*
+cd ecs-sample; zip -r ../ecs-sample.zip * .ebext*
 cd ..
 
 # upload zip to S3
