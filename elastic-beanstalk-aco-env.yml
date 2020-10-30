@@ -291,15 +291,15 @@ Resources:
       ResourceRecords:
         - !GetAtt EBEnvironment.EndpointURL
   
-  # the log group to create in cloudwatch so see the server container logs of the app
-  ec2ServerContainerLogGroup: 
+  # the log group to create in cloudwatch to see the containers logs of the app
+  ec2ContainersLogGroup: 
     Type: AWS::Logs::LogGroup
     Properties: 
       RetentionInDays: 14
-      LogGroupName: !Sub 'aco-${EBEnvironmentType}-server-container-logs'
+      LogGroupName: !Sub 'aco-${EBEnvironmentType}-containers-logs'
   
-  # this sns topic is for the cloudwatch alarm on server container errors to send notifications
-  serverErrorsSnsTopic:
+  # this sns topic is for the cloudwatch alarm on container errors to send notifications
+  containersErrorsSnsTopic:
     Type: AWS::SNS::Topic
     Properties: 
       Subscription: 
@@ -311,7 +311,7 @@ Resources:
   serverErrorsMetric: 
     Type: AWS::Logs::MetricFilter
     Properties: 
-      LogGroupName: !Ref ec2ServerContainerLogGroup
+      LogGroupName: !Ref ec2ContainersLogGroup
       FilterPattern: 'errorHandlers'
       MetricTransformations: 
         - MetricValue: '1'
@@ -335,4 +335,4 @@ Resources:
       Statistic: Sum
       Threshold: 6
       AlarmActions:
-        - !Ref serverErrorsSnsTopic
+        - !Ref containersErrorsSnsTopic
