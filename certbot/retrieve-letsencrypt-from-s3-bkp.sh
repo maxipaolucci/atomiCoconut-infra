@@ -75,11 +75,16 @@ fi
 echo "### Retrieving bkp https certificates from S3: s3://elasticbeanstalk-ap-southeast-2-782522910439/atomiCoconut$environment/certbot_certs_backups/certbot-certs-$param2.tar.gz"
 
 if [[ -z "$param2" ]]; then
-	  print_usage
-  	exit 0;
+	print_usage
+  exit 0;
 fi
 
 aws s3 cp s3://elasticbeanstalk-ap-southeast-2-782522910439/atomiCoconut$environment/certbot_certs_backups/certbot-certs-$param2.tar.gz .
+
+if [ ! -f certbot-certs-$param2.tar.gz ]; then
+  echo "File certbot-certs-$param2.tar.gz not found, exiting without performing any https certs retrieval..."
+  exit 0;
+fi
 
 tar xvfz certbot-certs-$param2.tar.gz
 
