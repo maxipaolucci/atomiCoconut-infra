@@ -72,7 +72,7 @@ if [[ ! -z "$param1" ]]; then
 	environment="-$param1";
 	nginxImageTag=$param1;
 fi
-echo "### Retrieving bkp from Environment: atomiCoconut$environment"
+echo "### Retrieving bkp https certificates from S3: s3://elasticbeanstalk-ap-southeast-2-782522910439/atomiCoconut$environment/certbot_certs_backups/certbot-certs-$param2.tar.gz"
 
 if [[ -z "$param2" ]]; then
 	  print_usage
@@ -85,6 +85,8 @@ tar xvfz certbot-certs-$param2.tar.gz
 
 rm certbot-certs-$param2.tar.gz
 
+echo "Latest backup of HTTPS Certificates retrieved!."
+echo
 
 echo
 echo

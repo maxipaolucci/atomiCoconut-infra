@@ -77,6 +77,13 @@ Parameters:
     NoEcho: true
     Default: /maxipaolucci/aco/sendgrid/apikey
     Description: Sendgrid API Key for atomiCoconut
+  DeployHttpsCertsFromBkp:
+    Type: String
+    AllowedValues: 
+      - true
+      - false
+    Default: true
+    Description: Set to true to allow deployment of the latest certificates backed up in S3 for this environment
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
@@ -270,6 +277,10 @@ Resources:
             # For production we want to pass an empty value
             OptionName: ENVIRONMENT_TYPE
             Value: !If [IsProdEnvironment, !Ref AWS::NoValue, !Ref EBEnvironmentType]
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            # This setting will be used to execute some commands defined in ebextensions files in initial sample app
+            OptionName: DEPLOY_HTTPS_CERTS_FROM_BKP
+            Value: !Ref DeployHttpsCertsFromBkp
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: SENDGRID_API_KEY
             Value: !If [IsProdEnvironment, !Ref SendgridApiKey, !Ref AWS::NoValue]
