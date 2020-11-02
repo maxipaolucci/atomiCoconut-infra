@@ -115,7 +115,7 @@ Resources:
           - Effect: Allow
             Principal:
               Service:
-              - elasticbeanstalk.amazonaws.com
+                - elasticbeanstalk.amazonaws.com
             Action:
               - 'sts:AssumeRole'
             Condition:
@@ -171,13 +171,14 @@ Resources:
     Properties: 
       ApplicationName: !Join [ '-', [!Ref EBAppName, !Ref EBEnvironmentType]]
       Description: !Sub 'This is the ${EBEnvironmentType} application'
-      # ResourceLifecycleConfig:
-      #   ServiceRole: !Ref EBServiceRole
-      #   VersionLifecycleConfig:
-      #     MaxCountRule:
-      #       DeleteSourceFromS3: true
-      #       Enabled: true
-      #       MaxCount: 100
+      ResourceLifecycleConfig:
+        # ServiceRole: !Ref EBServiceRole
+        ServiceRole: arn:aws:iam::782522910439:role/aws-elasticbeanstalk-service-role
+        VersionLifecycleConfig:
+          MaxCountRule:
+            DeleteSourceFromS3: true
+            Enabled: true
+            MaxCount: 100
       
   EBInitialAppVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
