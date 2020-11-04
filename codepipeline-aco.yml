@@ -64,6 +64,6 @@ Resources:
               InputArtifacts:
                 - Name: BuildArtifact
       Tags:
-        - Key: Project
-          Value: ProjectA
+        - Key: ENVIRONMENT
+          Value: testing
       
