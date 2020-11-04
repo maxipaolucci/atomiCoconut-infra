@@ -1,0 +1,69 @@
+Resources:
+  cicdPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties: 
+      ArtifactStore:
+        Location: codepipeline-ap-southeast-2-215851890597
+        Type: S3      
+      Name: cfn-pipeline
+      RoleArn: arn:aws:iam::782522910439:role/service-role/AWSCodePipelineServiceRole-ap-southeast-2-atomiCoconut-testing
+      DisableInboundStageTransitions: 
+        - StageName: Build
+          Reason: Disabled transition to save build time while testing
+      Stages: 
+        - Name: Source 
+          Actions: 
+            - Name: Source
+              ActionTypeId: 
+                Category: Source 
+                Owner: AWS 
+                Version: 1 
+                Provider: CodeStarSourceConnection 
+              OutputArtifacts: 
+                - Name: SourceArtifact
+              Namespace: SourceVariables
+              Configuration:
+                ConnectionArn: "arn:aws:codestar-connections:ap-southeast-2:782522910439:connection/6259b1cc-57cc-4958-ae36-a26259c0c1d7"
+                FullRepositoryId: "maxipaolucci/atomiCoconut"
+                BranchName: "testing"
+                OutputArtifactFormat: "CODE_ZIP"
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              RunOrder: 1
+              Region: ap-southeast-2
+              Namespace: BuildVariables
+              Configuration:
+                BatchEnabled: 'false'
+                ProjectName: atomiCoconut
+                EnvironmentVariables: '[{"name":"CURRENT_BRANCH","value":"#{SourceVariables.BranchName}","type":"PLAINTEXT"}]'
+              OutputArtifacts:
+                - Name: BuildArtifact
+              InputArtifacts:
+                - Name: SourceArtifact
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: ElasticBeanstalk
+                Version: 1
+              RunOrder: 1
+              Region: ap-southeast-2
+              Namespace: DeployVariables
+              Configuration:
+                ApplicationName: atomiCoconut-testing
+                EnvironmentName: atomiCoconut-env-testing
+              InputArtifacts:
+                - Name: BuildArtifact
+      Tags:
+        - Key: Project
+          Value: ProjectA
+      
