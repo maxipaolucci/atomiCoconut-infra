@@ -1,3 +1,20 @@
+Parameters:
+  EBAppName:
+    Description: ElasticBeanstalk application name
+    Type: String
+    Default: atomiCoconut
+  EBEnvironmentType:
+    Type: String
+    Description: ElasticBeanstalk environment type
+    Default: testing
+    AllowedValues:
+      - testing
+      - production
+  RepoBranch:
+    Description: Repository branch name
+    Type: String
+    Default: testing
+
 Resources:
   cicdPipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -5,7 +22,7 @@ Resources:
       ArtifactStore:
         Location: codepipeline-ap-southeast-2-215851890597
         Type: S3      
-      Name: cfn-pipeline
+      Name: !Join ['-', [ 'cfn', !Ref EBAppName, !Ref EBEnvironmentType ] ]
       RoleArn: arn:aws:iam::782522910439:role/service-role/AWSCodePipelineServiceRole-ap-southeast-2-atomiCoconut-testing
       DisableInboundStageTransitions: 
         - StageName: Build
@@ -25,7 +42,7 @@ Resources:
               Configuration:
                 ConnectionArn: "arn:aws:codestar-connections:ap-southeast-2:782522910439:connection/6259b1cc-57cc-4958-ae36-a26259c0c1d7"
                 FullRepositoryId: "maxipaolucci/atomiCoconut"
-                BranchName: "testing"
+                BranchName: !Ref RepoBranch
                 OutputArtifactFormat: "CODE_ZIP"
               RunOrder: 1
         - Name: Build
@@ -59,11 +76,13 @@ Resources:
               Region: ap-southeast-2
               Namespace: DeployVariables
               Configuration:
-                ApplicationName: atomiCoconut-testing
-                EnvironmentName: atomiCoconut-env-testing
+                ApplicationName: !Join ['-', [ !Ref EBAppName, !Ref EBEnvironmentType ] ]
+                EnvironmentName: !Join ['-', [ !Ref EBAppName, 'env', !Ref EBEnvironmentType ] ]
               InputArtifacts:
                 - Name: BuildArtifact
       Tags:
         - Key: ENVIRONMENT
-          Value: testing
+          Value: !Ref EBEnvironmentType
+        - Key: REPO_BRANCH
+          Value: !Ref RepoBranch
       
