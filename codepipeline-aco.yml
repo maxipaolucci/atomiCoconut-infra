@@ -14,19 +14,120 @@ Parameters:
     Description: Repository branch name
     Type: String
     Default: testing
+  CodePipelineS3Bucket:
+    Description: S3 bucket to store CodePipeline Resources
+    Type: String
+    Default: codepipeline-ap-southeast-2-215851890597
+    AllowedValues:
+      - codepipeline-ap-southeast-2-215851890597
+
+Conditions: 
+  # The app is deployable if we are building the master or testing branches
+  IsDeployable: !Or [!Equals [ !Ref RepoBranch, master ], !Equals [ !Ref RepoBranch, testing ]]
 
 Resources:
+  acoCodeBuildServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub '${EBAppName}-${RepoBranch}-codebuild-service-role'
+      Description: !Sub 'CodeBuild service role for branch ${RepoBranch}' 
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /service-role/
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'
+      Policies:
+        - PolicyName: !Join ['-', [ CodeBuildBasePolicy, !Ref EBAppName, !Ref RepoBranch, !Ref AWS::Region ] ]
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub 'arn:aws:logs:ap-southeast-2:782522910439:log-group:/aws/codebuild/${EBAppName}-${RepoBranch}'
+                  - !Sub 'arn:aws:logs:ap-southeast-2:782522910439:log-group:/aws/codebuild/${EBAppName}-${RepoBranch}:*'
+              - Effect: Allow
+                Resource:
+                  - "arn:aws:s3:::codepipeline-ap-southeast-2-*"
+                Action: 
+                  - "s3:PutObject"
+                  - "s3:GetObject"
+                  - "s3:GetObjectVersion"
+                  - "s3:GetBucketAcl"
+                  - "s3:GetBucketLocation"
+              - Effect: Allow
+                Resource:
+                  - !Sub 'arn:aws:s3:::${CodePipelineS3Bucket}'
+                  - !Sub 'arn:aws:s3:::${CodePipelineS3Bucket}/*'
+                Action: 
+                  - "s3:PutObject"
+                  - "s3:GetBucketAcl"
+                  - "s3:GetBucketLocation"
+              - Effect: Allow
+                Action:
+                  - "codebuild:CreateReportGroup"
+                  - "codebuild:CreateReport"
+                  - "codebuild:UpdateReport"
+                  - "codebuild:BatchPutTestCases"
+                  - "codebuild:BatchPutCodeCoverages"
+                Resource:
+                  - !Sub 'arn:aws:codebuild:ap-southeast-2:782522910439:report-group/${EBAppName}-${RepoBranch}-*'
+  
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    DependsOn: acoCodeBuildServiceRole
+    Properties:
+      Name: !Join ['-', [ !Ref EBAppName, !Ref RepoBranch ] ]
+      Description: !Sub 'aCo Build project for ${EBEnvironmentType} branch'
+      # ServiceRole: arn:aws:iam::782522910439:role/service-role/codebuild-atomiCoconut-service-role
+      ServiceRole: !GetAtt acoCodeBuildServiceRole.Arn
+      Artifacts:
+        EncryptionDisabled: false
+        Location: !Ref CodePipelineS3Bucket
+        Name: !Ref EBAppName
+        NamespaceType: NONE
+        Packaging: ZIP
+        Path: !Join
+          - '/'
+          - [ !Join ['-', [ 'cfn', !Ref EBAppName, !Ref EBEnvironmentType ] ], codeBuildArtifacts ]
+        Type: S3
+      BadgeEnabled: false
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        PrivilegedMode: true
+      Source:
+        Type: S3
+        Location: !Join
+          - '/'
+          - [ !Ref CodePipelineS3Bucket, !Join ['-', [ 'cfn', !Ref EBAppName, !Ref EBEnvironmentType ] ], SourceArti ]
+      TimeoutInMinutes: 60
+      QueuedTimeoutInMinutes: 480
+
   cicdPipeline:
     Type: AWS::CodePipeline::Pipeline
+    DependsOn: CodeBuildProject
     Properties: 
       ArtifactStore:
-        Location: codepipeline-ap-southeast-2-215851890597
+        Location: !Ref CodePipelineS3Bucket
         Type: S3      
-      Name: !Join ['-', [ 'cfn', !Ref EBAppName, !Ref EBEnvironmentType ] ]
+      Name: !Join ['-', [ 'cicd', !Ref EBAppName, !Ref EBEnvironmentType ] ]
       RoleArn: arn:aws:iam::782522910439:role/service-role/AWSCodePipelineServiceRole-ap-southeast-2-atomiCoconut-testing
-      DisableInboundStageTransitions: 
-        - StageName: Build
-          Reason: Disabled transition to save build time while testing
+      # DisableInboundStageTransitions: 
+      #   - StageName: Build
+      #     Reason: Disabled transition to save build time while testing
       Stages: 
         - Name: Source 
           Actions: 
@@ -43,7 +144,7 @@ Resources:
                 ConnectionArn: "arn:aws:codestar-connections:ap-southeast-2:782522910439:connection/6259b1cc-57cc-4958-ae36-a26259c0c1d7"
                 FullRepositoryId: "maxipaolucci/atomiCoconut"
                 BranchName: !Ref RepoBranch
-                OutputArtifactFormat: "CODE_ZIP"
+                OutputArtifactFormat: CODE_ZIP
               RunOrder: 1
         - Name: Build
           Actions:
@@ -58,28 +159,31 @@ Resources:
               Namespace: BuildVariables
               Configuration:
                 BatchEnabled: 'false'
-                ProjectName: atomiCoconut
+                ProjectName: !Join ['-', [ !Ref EBAppName, !Ref RepoBranch ] ]
                 EnvironmentVariables: '[{"name":"CURRENT_BRANCH","value":"#{SourceVariables.BranchName}","type":"PLAINTEXT"}]'
               OutputArtifacts:
                 - Name: BuildArtifact
               InputArtifacts:
                 - Name: SourceArtifact
-        - Name: Deploy
-          Actions:
-            - Name: Deploy
-              ActionTypeId:
-                Category: Deploy
-                Owner: AWS
-                Provider: ElasticBeanstalk
-                Version: 1
-              RunOrder: 1
-              Region: ap-southeast-2
-              Namespace: DeployVariables
-              Configuration:
-                ApplicationName: !Join ['-', [ !Ref EBAppName, !Ref EBEnvironmentType ] ]
-                EnvironmentName: !Join ['-', [ !Ref EBAppName, 'env', !Ref EBEnvironmentType ] ]
-              InputArtifacts:
-                - Name: BuildArtifact
+        - !If 
+          - IsDeployable
+          - Name: Deploy
+            Actions:
+              - Name: Deploy
+                ActionTypeId:
+                  Category: Deploy
+                  Owner: AWS
+                  Provider: ElasticBeanstalk
+                  Version: 1
+                RunOrder: 1
+                Region: ap-southeast-2
+                Namespace: DeployVariables
+                Configuration:
+                  ApplicationName: !Join ['-', [ !Ref EBAppName, !Ref EBEnvironmentType ] ]
+                  EnvironmentName: !Join ['-', [ !Ref EBAppName, 'env', !Ref EBEnvironmentType ] ]
+                InputArtifacts:
+                  - Name: BuildArtifact
+          - !Ref AWS::NoValue
       Tags:
         - Key: ENVIRONMENT
           Value: !Ref EBEnvironmentType
