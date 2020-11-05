@@ -8,6 +8,7 @@ Parameters:
     Description: ElasticBeanstalk environment type
     Default: testing
     AllowedValues:
+      - development
       - testing
       - production
   RepoBranch:
@@ -89,7 +90,7 @@ Resources:
     DependsOn: acoCodeBuildServiceRole
     Properties:
       Name: !Join ['-', [ !Ref EBAppName, !Ref RepoBranch ] ]
-      Description: !Sub 'aCo Build project for ${EBEnvironmentType} branch'
+      Description: !Sub 'aCo Build project for ${RepoBranch} branch'
       # ServiceRole: arn:aws:iam::782522910439:role/service-role/codebuild-atomiCoconut-service-role
       ServiceRole: !GetAtt acoCodeBuildServiceRole.Arn
       Artifacts:
@@ -100,7 +101,7 @@ Resources:
         Packaging: ZIP
         Path: !Join
           - '/'
-          - [ !Join ['-', [ 'cfn', !Ref EBAppName, !Ref EBEnvironmentType ] ], codeBuildArtifacts ]
+          - [ !Join ['-', [ 'cicd', !Ref EBAppName, !Ref RepoBranch ] ], codeBuildArtifacts ]
         Type: S3
       BadgeEnabled: false
       Environment:
@@ -112,7 +113,7 @@ Resources:
         Type: S3
         Location: !Join
           - '/'
-          - [ !Ref CodePipelineS3Bucket, !Join ['-', [ 'cfn', !Ref EBAppName, !Ref EBEnvironmentType ] ], SourceArti ]
+          - [ !Ref CodePipelineS3Bucket, !Join ['-', [ 'cicd', !Ref EBAppName, !Ref RepoBranch ] ], SourceArti ]
       TimeoutInMinutes: 60
       QueuedTimeoutInMinutes: 480
 
@@ -123,7 +124,7 @@ Resources:
       ArtifactStore:
         Location: !Ref CodePipelineS3Bucket
         Type: S3      
-      Name: !Join ['-', [ 'cicd', !Ref EBAppName, !Ref EBEnvironmentType ] ]
+      Name: !Join ['-', [ 'cicd', !Ref EBAppName, !Ref RepoBranch ] ]
       RoleArn: arn:aws:iam::782522910439:role/service-role/AWSCodePipelineServiceRole-ap-southeast-2-atomiCoconut-testing
       # DisableInboundStageTransitions: 
       #   - StageName: Build
