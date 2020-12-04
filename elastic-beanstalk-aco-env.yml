@@ -22,6 +22,10 @@ Parameters:
     Type: String
     Description: Email where to receive notifications regarding ElasticBeanstalk environment
     Default: maxipaolucci@gmail.com
+  MaxDbBkpKept:
+    Type: String
+    Description: Maximum amount of database backups to keep in S3
+    Default: 30
   EBKeyPair:
     Type: 'AWS::EC2::KeyPair::KeyName'
     NoEcho: true
@@ -254,6 +258,9 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: PORT
             Value: 7777
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: MAX_DB_BKP_KEPT
+            Value: !Ref MaxDbBkpKept
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: MAIL_TRAP_PASS
             Value: !If [IsProdEnvironment, !Ref AWS::NoValue, !Ref MailTrapPass]
