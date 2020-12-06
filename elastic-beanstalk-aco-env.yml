@@ -212,6 +212,12 @@ Resources:
           - Namespace: 'aws:ec2:instances'
             OptionName: InstanceTypes
             Value: t2.micro
+          - Namespace: 'aws:ec2:instances'
+            OptionName: EnableSpot
+            Value: true
+          - Namespace: 'aws:ec2:instances'
+            OptionName: SpotFleetOnDemandBase
+            Value: !If [IsProdEnvironment, 1, 0] # in nonprod the instance should be spot, in prod ondemand
             
           - Namespace: 'aws:autoscaling:launchconfiguration'
             OptionName: EC2KeyName

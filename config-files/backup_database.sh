@@ -101,7 +101,7 @@ sudo rm -f backup-$CURRENT_DB_BKP.tar.gz
 
 # increment or reset backup counter
 MAX_DB_BKP_KEPT=`sudo /opt/elasticbeanstalk/bin/get-config environment | jq .MAX_DB_BKP_KEPT | tr -d '"'`
-if [[ "$CURRENT_DB_BKP" -eq "$MAX_DB_BKP_KEPT" ]]; then
+if [[ "$CURRENT_DB_BKP" -ge "$MAX_DB_BKP_KEPT" ]]; then
   CURRENT_DB_BKP=1
 else
   let CURRENT_DB_BKP+=1
