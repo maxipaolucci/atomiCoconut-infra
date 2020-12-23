@@ -88,9 +88,17 @@ Parameters:
       - false
     Default: true
     Description: Set to true to allow deployment of the latest certificates backed up in S3 for this environment
+  EBEnableEC2SpotInstances:
+    Type: String
+    AllowedValues: 
+      - true
+      - false
+    Default: false
+    Description: Set to true to use EC2 spot intance in EB environment, or false for on demmand instances
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
+  useSpotEC2Instances: !Equals [ !Ref EBEnableEC2SpotInstances, true ]
 
 Resources:
 
@@ -214,10 +222,10 @@ Resources:
             Value: t2.micro
           - Namespace: 'aws:ec2:instances'
             OptionName: EnableSpot
-            Value: true
+            Value: !Ref EBEnableEC2SpotInstances
           - Namespace: 'aws:ec2:instances'
             OptionName: SpotFleetOnDemandBase
-            Value: !If [IsProdEnvironment, 1, 0] # in nonprod the instance should be spot, in prod ondemand
+            Value: !If [useSpotEC2Instances, 0, 1]
             
           - Namespace: 'aws:autoscaling:launchconfiguration'
             OptionName: EC2KeyName
