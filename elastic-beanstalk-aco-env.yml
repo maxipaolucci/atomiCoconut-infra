@@ -36,6 +36,11 @@ Parameters:
     NoEcho: true
     Default: /maxipaolucci/currencylayer/key
     Description: Access key for currencylayer.com to access the API
+  MapsApiKey:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    NoEcho: true
+    Default: /maxipaolucci/aco/maps/apikey
+    Description: API key for Google Maps
   PusherSecret:
     Type: 'AWS::SSM::Parameter::Value<String>'
     # NoEcho: true
@@ -248,6 +253,9 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: CURRENCYLAYER_KEY
             Value: !Ref CurrencyLayerKey
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            OptionName: MAPS_API_KEY
+            Value: !Ref MapsApiKey
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: SESSION_DURATION_SECONDS
             Value: 86400
