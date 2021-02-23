@@ -166,14 +166,10 @@ Resources:
         - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker'
         - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier'
       Tags:
-        - Key: 'CLOUDWATCH_AGENT_ADMIN'
-          Value: 'Admin stuff to work with the unified cloudwatch agent'
-        - Key: 'BEANSTALK_WEBTIER'
-          Value: 'Beanstalk web tier permissions'
-        - Key: 'BEANSTALK_MULTI_DOCKER'
-          Value: 'Beanstalk multi docker permissions'
-        - Key: 'S3_FULL_ACCESS'
-          Value: 'S3 Full access role'
+        - Key: 'ENVIRONMENT'
+          Value: !Ref EBEnvironmentType
+        - Key: 'APP_NAME'
+          Value: !Ref EBAppName
 
   InstanceProfileForEC2ServiceRole:
           Type: 'AWS::IAM::InstanceProfile'
