@@ -44,7 +44,6 @@ resource "aws_elastic_beanstalk_environment" "elasticbeanstalk_environment" {
     name      = "EnvironmentType"
     value     = "SingleInstance"
   }
-
   setting {
     namespace = "aws:elasticbeanstalk:environment"
     name      = "ServiceRole"
@@ -56,13 +55,11 @@ resource "aws_elastic_beanstalk_environment" "elasticbeanstalk_environment" {
     name      = "InstanceTypes"
     value     = "t2.micro"
   }
-
   setting {
     namespace = "aws:ec2:instances"
     name      = "EnableSpot"
     value     = var.eb_enable_ec2_spot_instances
   }
-
   setting {
     namespace = "aws:ec2:instances"
     name      = "SpotFleetOnDemandBase"
@@ -74,18 +71,59 @@ resource "aws_elastic_beanstalk_environment" "elasticbeanstalk_environment" {
     name      = "IamInstanceProfile"
     value     = aws_iam_instance_profile.aco_instance_profile_elasticbeanstalk_ec2_role.id
   }
-
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "SecurityGroups"
     value     = aws_security_group.atomicoconut_security_group.name
   }
-
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "EC2KeyName"
     value     = var.aco_ec2_key_name
   }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:sns:topics"
+    name      = "Notification Endpoint"
+    value     = var.eb_sns_topic_email
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:healthreporting:system"
+    name      = "SystemType"
+    value     = "enhanced"
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "CURRENCYLAYER_KEY"
+    value     = data.aws_ssm_parameter.currency_layer_key.value
+  }
+  # setting {
+  #   namespace = "aws:elasticbeanstalk:application:environment"
+  #   name      = "CURRENCYLAYER_KEY"
+  #   value     = data.aws_ssm_parameter.currency_layer_key.value
+  # }
+  # setting {
+  #   namespace = "aws:elasticbeanstalk:application:environment"
+  #   name      = "CURRENCYLAYER_KEY"
+  #   value     = data.aws_ssm_parameter.currency_layer_key.value
+  # }
+  # setting {
+  #   namespace = "aws:elasticbeanstalk:application:environment"
+  #   name      = "CURRENCYLAYER_KEY"
+  #   value     = data.aws_ssm_parameter.currency_layer_key.value
+  # }
+  # setting {
+  #   namespace = "aws:elasticbeanstalk:application:environment"
+  #   name      = "CURRENCYLAYER_KEY"
+  #   value     = data.aws_ssm_parameter.currency_layer_key.value
+  # }
+  # setting {
+  #   namespace = "aws:elasticbeanstalk:application:environment"
+  #   name      = "CURRENCYLAYER_KEY"
+  #   value     = data.aws_ssm_parameter.currency_layer_key.value
+  # }
 }
 
 output "aco_elasticbeanstalk_url" {

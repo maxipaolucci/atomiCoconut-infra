@@ -32,3 +32,8 @@ variable "aco_ec2_key_name" {
   default = "atomiCoconut_keypair"
   description = "Keypair for elasticbeanstalk environment to connect to EC2 instances"
 }
+
+variable "eb_sns_topic_email" {
+  default = "maxipaolucci@gmail.com"
+  description = "Email where to receive notifications regarding ElasticBeanstalk environment"
+}

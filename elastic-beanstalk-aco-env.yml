@@ -217,6 +217,10 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:environment'
             OptionName: ServiceRole
             Value: !Ref EBServiceRole
+          
+          - Namespace: 'aws:elasticbeanstalk:xray'
+            OptionName: XRayEnabled
+            Value: true
 
           - Namespace: 'aws:ec2:instances'
             OptionName: InstanceTypes
