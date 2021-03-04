@@ -27,6 +27,11 @@ variable "eb_enable_ec2_spot_instances" {
   type = bool
   description = "Set to true to use EC2 spot intance in EB environment, or false for on demmand instances"
 }
+variable "deploy_https_certs_from_bkp" {
+  default = true
+  type = bool
+  description = "Set to true to allow deployment of the latest certificates backed up in S3 for this environment"
+}
 
 variable "aco_ec2_key_name" {
   default = "atomiCoconut_keypair"
@@ -36,4 +41,10 @@ variable "aco_ec2_key_name" {
 variable "eb_sns_topic_email" {
   default = "maxipaolucci@gmail.com"
   description = "Email where to receive notifications regarding ElasticBeanstalk environment"
+}
+
+variable "max_db_bkp_kept" {
+  default = 30
+  type = number
+  description = "Maximum amount of database backups to keep in S3"
 }

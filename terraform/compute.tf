@@ -99,31 +99,106 @@ resource "aws_elastic_beanstalk_environment" "elasticbeanstalk_environment" {
     name      = "CURRENCYLAYER_KEY"
     value     = data.aws_ssm_parameter.currency_layer_key.value
   }
-  # setting {
-  #   namespace = "aws:elasticbeanstalk:application:environment"
-  #   name      = "CURRENCYLAYER_KEY"
-  #   value     = data.aws_ssm_parameter.currency_layer_key.value
-  # }
-  # setting {
-  #   namespace = "aws:elasticbeanstalk:application:environment"
-  #   name      = "CURRENCYLAYER_KEY"
-  #   value     = data.aws_ssm_parameter.currency_layer_key.value
-  # }
-  # setting {
-  #   namespace = "aws:elasticbeanstalk:application:environment"
-  #   name      = "CURRENCYLAYER_KEY"
-  #   value     = data.aws_ssm_parameter.currency_layer_key.value
-  # }
-  # setting {
-  #   namespace = "aws:elasticbeanstalk:application:environment"
-  #   name      = "CURRENCYLAYER_KEY"
-  #   value     = data.aws_ssm_parameter.currency_layer_key.value
-  # }
-  # setting {
-  #   namespace = "aws:elasticbeanstalk:application:environment"
-  #   name      = "CURRENCYLAYER_KEY"
-  #   value     = data.aws_ssm_parameter.currency_layer_key.value
-  # }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "MAPS_API_KEY"
+    value     = data.aws_ssm_parameter.maps_api_key.value
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "SESSION_DURATION_SECONDS"
+    value     = 86400
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "SESSION_KEY"
+    value     = data.aws_ssm_parameter.nodejs_session_key.value
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "SESSION_SECRET"
+    value     = data.aws_ssm_parameter.nodejs_session_secret.value
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "PUSHER_SECRET"
+    value     = data.aws_ssm_parameter.pusher_secret.value
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "PUSHER_APP_ID"
+    value     = data.aws_ssm_parameter.pusher_app_id.value
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "PUSHER_CLUSTER"
+    value     = "ap4"
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "PUSHER_KEY"
+    value     = data.aws_ssm_parameter.pusher_key.value
+  }
+  setting {
+    # nodejs api listening port
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "PORT"
+    value     = 7777
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "MAX_DB_BKP_KEPT"
+    value     = var.max_db_bkp_kept
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "MAIL_TRAP_PASS"
+    value     = var.environment == "production" ? "" : data.aws_ssm_parameter.mailtrap_pass.value
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "MAIL_TRAP_USER"
+    value     = var.environment == "production" ? "" : data.aws_ssm_parameter.mailtrap_user.value
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "MAIL_TRAP_PORT"
+    value     = var.environment == "production" ? "" : 2525
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "MAIL_TRAP_HOST"
+    value     = var.environment == "production" ? "" : "smtp.mailtrap.io"
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "DATABASE"
+    value     = data.aws_ssm_parameter.database.value
+  }
+  setting {
+    # this is for the nodejs server, we want all nonprod environments as development
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "NODE_ENV"
+    value     = var.environment == "production" ? "production" : "development"
+  }
+  setting {
+    # This setting will be used to execute some commands defined in ebextensions files in initial sample app
+    # For production we want to pass an empty value
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "ENVIRONMENT_TYPE"
+    value     = var.environment == "production" ? "" : var.environment
+  }
+  setting {
+    # This setting will be used to execute some commands defined in ebextensions files in initial sample app
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "DEPLOY_HTTPS_CERTS_FROM_BKP"
+    value     = var.deploy_https_certs_from_bkp
+  }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "SENDGRID_API_KEY"
+    value     = var.environment == "production" ? data.aws_ssm_parameter.sendgrid_api_key.value : ""
+  }
 }
 
 output "aco_elasticbeanstalk_url" {
