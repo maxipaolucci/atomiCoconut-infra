@@ -217,10 +217,12 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:environment'
             OptionName: ServiceRole
             Value: !Ref EBServiceRole
-          
-          - Namespace: 'aws:elasticbeanstalk:xray'
-            OptionName: XRayEnabled
-            Value: true
+
+          # not using this one. I am using xray as a docker container in docker-compose instead of installing the agent in the ec2 instance
+          # this makes easier the communication between containers        
+          # - Namespace: 'aws:elasticbeanstalk:xray'
+          #   OptionName: XRayEnabled
+          #   Value: true
 
           - Namespace: 'aws:ec2:instances'
             OptionName: InstanceTypes
@@ -301,7 +303,7 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             # this one is for the nodejs backend app
             OptionName: NODE_ENV
-            Value: !If [IsProdEnvironment, 'production', 'development']
+            Value: !Ref EBEnvironmentType
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             # This setting will be used to execute some commands defined in ebextensions files in initial sample app
             # For production we want to pass an empty value

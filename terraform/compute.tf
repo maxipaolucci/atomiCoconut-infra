@@ -176,10 +176,10 @@ resource "aws_elastic_beanstalk_environment" "elasticbeanstalk_environment" {
     value     = data.aws_ssm_parameter.database.value
   }
   setting {
-    # this is for the nodejs server, we want all nonprod environments as development
+    # this is for the nodejs server
     namespace = "aws:elasticbeanstalk:application:environment"
     name      = "NODE_ENV"
-    value     = var.environment == "production" ? "production" : "development"
+    value     = var.environment
   }
   setting {
     # This setting will be used to execute some commands defined in ebextensions files in initial sample app
