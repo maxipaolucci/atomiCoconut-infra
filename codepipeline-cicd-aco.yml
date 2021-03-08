@@ -27,72 +27,22 @@ Conditions:
   IsDeployable: !Or [!Equals [ !Ref RepoBranch, master ], !Equals [ !Ref RepoBranch, testing ]]
 
 Resources:
-  acoCodeBuildServiceRole:
-    Type: 'AWS::IAM::Role'
+  CodePipelineRolesStack:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      RoleName: !Sub '${EBAppName}-${RepoBranch}-codebuild-service-role'
-      Description: !Sub 'CodeBuild service role for branch ${RepoBranch}' 
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - codebuild.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Path: /service-role/
-      MaxSessionDuration: 3600
-      ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'
-      Policies:
-        - PolicyName: !Join ['-', [ CodeBuildBasePolicy, !Ref EBAppName, !Ref RepoBranch, !Ref AWS::Region ] ]
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'logs:CreateLogGroup'
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
-                Resource:
-                  - !Sub 'arn:aws:logs:ap-southeast-2:782522910439:log-group:/aws/codebuild/${EBAppName}-${RepoBranch}'
-                  - !Sub 'arn:aws:logs:ap-southeast-2:782522910439:log-group:/aws/codebuild/${EBAppName}-${RepoBranch}:*'
-              - Effect: Allow
-                Resource:
-                  - "arn:aws:s3:::codepipeline-ap-southeast-2-*"
-                Action: 
-                  - "s3:PutObject"
-                  - "s3:GetObject"
-                  - "s3:GetObjectVersion"
-                  - "s3:GetBucketAcl"
-                  - "s3:GetBucketLocation"
-              - Effect: Allow
-                Resource:
-                  - !Sub 'arn:aws:s3:::${CodePipelineS3Bucket}'
-                  - !Sub 'arn:aws:s3:::${CodePipelineS3Bucket}/*'
-                Action: 
-                  - "s3:PutObject"
-                  - "s3:GetBucketAcl"
-                  - "s3:GetBucketLocation"
-              - Effect: Allow
-                Action:
-                  - "codebuild:CreateReportGroup"
-                  - "codebuild:CreateReport"
-                  - "codebuild:UpdateReport"
-                  - "codebuild:BatchPutTestCases"
-                  - "codebuild:BatchPutCodeCoverages"
-                Resource:
-                  - !Sub 'arn:aws:codebuild:ap-southeast-2:782522910439:report-group/${EBAppName}-${RepoBranch}-*'
-  
+      TemplateURL: https://maxipaolucci.s3-ap-southeast-2.amazonaws.com/cloudformation-stacks/codepipeline-roles.yml
+      Parameters:
+        AppName: !Ref EBAppName
+        RepoBranch: !Ref RepoBranch
+        CodePipelineS3Bucket: !Ref CodePipelineS3Bucket
+
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
-    DependsOn: acoCodeBuildServiceRole
+    DependsOn: CodePipelineRolesStack
     Properties:
       Name: !Join ['-', [ !Ref EBAppName, !Ref RepoBranch ] ]
       Description: !Sub 'aCo Build project for ${RepoBranch} branch'
-      # ServiceRole: arn:aws:iam::782522910439:role/service-role/codebuild-atomiCoconut-service-role
-      ServiceRole: !GetAtt acoCodeBuildServiceRole.Arn
+      ServiceRole: !GetAtt CodePipelineRolesStack.Outputs.CodeBuildRoleArn
       Artifacts:
         EncryptionDisabled: false
         Location: !Ref CodePipelineS3Bucket
@@ -125,7 +75,7 @@ Resources:
         Location: !Ref CodePipelineS3Bucket
         Type: S3      
       Name: !Join ['-', [ 'cicd', !Ref EBAppName, !Ref RepoBranch ] ]
-      RoleArn: arn:aws:iam::782522910439:role/service-role/AWSCodePipelineServiceRole-ap-southeast-2-atomiCoconut-testing
+      RoleArn: !GetAtt CodePipelineRolesStack.Outputs.CodePipelineRoleArn
       # DisableInboundStageTransitions: 
       #   - StageName: Build
       #     Reason: Disabled transition to save build time while testing
