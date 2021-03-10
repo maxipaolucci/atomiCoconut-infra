@@ -33,6 +33,7 @@ Resources:
       MaxSessionDuration: 3600
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/AmazonElasticContainerRegistryPublicPowerUser'
       Policies:
         - PolicyName: !Join ['-', [ CodeBuildBasePolicy, !Ref AppName, !Ref RepoBranch, !Ref AWS::Region ] ]
           PolicyDocument:
