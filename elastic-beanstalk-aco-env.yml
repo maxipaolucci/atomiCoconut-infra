@@ -150,7 +150,8 @@ Resources:
       MaxSessionDuration: 3600
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth'
-        - 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService'
+        - 'arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy'
+        # - 'arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService' #deprecated , replaced by AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy
 
   EC2ServiceRoleForEB:
     Type: 'AWS::IAM::Role'
