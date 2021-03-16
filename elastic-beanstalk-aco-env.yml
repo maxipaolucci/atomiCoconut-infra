@@ -1,3 +1,7 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'Infrastructure for atomiCoconut project'
+
 Parameters:
   EBAppName:
     Description: ElasticBeanstalk application name
@@ -316,6 +320,18 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: SENDGRID_API_KEY
             Value: !If [IsProdEnvironment, !Ref SendgridApiKey, !Ref AWS::NoValue]
+
+  CodePipelineRolesStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: !Ref EBEnvironment
+    Properties:
+      TemplateURL: https://atomicoconut.s3-ap-southeast-2.amazonaws.com/infrastructure/nested-stacks/codepipeline-cicd-aco.yml
+      Parameters:
+        AppName: !Ref AppName
+        EnvironmentType: !Ref EBEnvironmentType
+        RepoBranch: !Ref RepoBranch
+        CodePipelineS3Bucket: !Ref CodePipelineS3Bucket
+        RepoName: "maxipaolucci/atomiCoconut"
 
   R53toEbDnsRecord:
     Type: AWS::Route53::RecordSet

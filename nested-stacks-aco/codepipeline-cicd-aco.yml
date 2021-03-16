@@ -1,9 +1,13 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'CICD AWS CodePipeline for atomiCoconut project'
+
 Parameters:
-  EBAppName:
+  AppName:
     Description: ElasticBeanstalk application name
     Type: String
     Default: atomiCoconut
-  EBEnvironmentType:
+  EnvironmentType:
     Type: String
     Description: ElasticBeanstalk environment type
     Default: testing
@@ -15,6 +19,14 @@ Parameters:
     Description: Repository branch name
     Type: String
     Default: testing
+  RepoConnectionArn: 
+    Default: "arn:aws:codestar-connections:ap-southeast-2:782522910439:connection/6259b1cc-57cc-4958-ae36-a26259c0c1d7"
+    Type: String
+    Description: Connection star arn to connect to Github repositories
+  RepoName:
+    Default: "maxipaolucci/atomiCoconut"
+    Description: Git Repository name
+    Type: String
   CodePipelineS3Bucket:
     Description: S3 bucket to store CodePipeline Resources
     Type: String
@@ -32,26 +44,25 @@ Resources:
     Properties:
       TemplateURL: https://maxipaolucci.s3-ap-southeast-2.amazonaws.com/cloudformation-stacks/codepipeline-roles.yml
       Parameters:
-        AppName: !Ref EBAppName
+        AppName: !Ref AppName
         RepoBranch: !Ref RepoBranch
         CodePipelineS3Bucket: !Ref CodePipelineS3Bucket
 
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
-    DependsOn: CodePipelineRolesStack
     Properties:
-      Name: !Join ['-', [ !Ref EBAppName, !Ref RepoBranch ] ]
+      Name: !Join ['-', [ !Ref AppName, !Ref RepoBranch ] ]
       Description: !Sub 'aCo Build project for ${RepoBranch} branch'
       ServiceRole: !GetAtt CodePipelineRolesStack.Outputs.CodeBuildRoleArn
       Artifacts:
         EncryptionDisabled: false
         Location: !Ref CodePipelineS3Bucket
-        Name: !Ref EBAppName
+        Name: !Ref AppName
         NamespaceType: NONE
         Packaging: ZIP
         Path: !Join
           - '/'
-          - [ !Join ['-', [ 'cicd', !Ref EBAppName, !Ref RepoBranch ] ], codeBuildArtifacts ]
+          - [ !Join ['-', [ 'cicd', !Ref AppName, !Ref RepoBranch ] ], codeBuildArtifacts ]
         Type: S3
       BadgeEnabled: false
       Environment:
@@ -63,7 +74,7 @@ Resources:
         Type: S3
         Location: !Join
           - '/'
-          - [ !Ref CodePipelineS3Bucket, !Join ['-', [ 'cicd', !Ref EBAppName, !Ref RepoBranch ] ], SourceArti ]
+          - [ !Ref CodePipelineS3Bucket, !Join ['-', [ 'cicd', !Ref AppName, !Ref RepoBranch ] ], SourceArti ]
       TimeoutInMinutes: 60
       QueuedTimeoutInMinutes: 480
 
@@ -74,7 +85,7 @@ Resources:
       ArtifactStore:
         Location: !Ref CodePipelineS3Bucket
         Type: S3      
-      Name: !Join ['-', [ 'cicd', !Ref EBAppName, !Ref RepoBranch ] ]
+      Name: !Join ['-', [ 'cicd', !Ref AppName, !Ref RepoBranch ] ]
       RoleArn: !GetAtt CodePipelineRolesStack.Outputs.CodePipelineRoleArn
       # DisableInboundStageTransitions: 
       #   - StageName: Build
@@ -92,8 +103,8 @@ Resources:
                 - Name: SourceArtifact
               Namespace: SourceVariables
               Configuration:
-                ConnectionArn: "arn:aws:codestar-connections:ap-southeast-2:782522910439:connection/6259b1cc-57cc-4958-ae36-a26259c0c1d7"
-                FullRepositoryId: "maxipaolucci/atomiCoconut"
+                ConnectionArn: !Ref RepoConnectionArn
+                FullRepositoryId: !Ref RepoName
                 BranchName: !Ref RepoBranch
                 OutputArtifactFormat: CODE_ZIP
               RunOrder: 1
@@ -110,7 +121,7 @@ Resources:
               Namespace: BuildVariables
               Configuration:
                 BatchEnabled: 'false'
-                ProjectName: !Join ['-', [ !Ref EBAppName, !Ref RepoBranch ] ]
+                ProjectName: !Join ['-', [ !Ref AppName, !Ref RepoBranch ] ]
                 EnvironmentVariables: '[{"name":"CURRENT_BRANCH","value":"#{SourceVariables.BranchName}","type":"PLAINTEXT"}]'
               OutputArtifacts:
                 - Name: BuildArtifact
@@ -130,14 +141,14 @@ Resources:
                 Region: ap-southeast-2
                 Namespace: DeployVariables
                 Configuration:
-                  ApplicationName: !Join ['-', [ !Ref EBAppName, !Ref EBEnvironmentType ] ]
-                  EnvironmentName: !Join ['-', [ !Ref EBAppName, 'env', !Ref EBEnvironmentType ] ]
+                  ApplicationName: !Join ['-', [ !Ref AppName, !Ref EnvironmentType ] ]
+                  EnvironmentName: !Join ['-', [ !Ref AppName, 'env', !Ref EnvironmentType ] ]
                 InputArtifacts:
                   - Name: BuildArtifact
           - !Ref AWS::NoValue
       Tags:
         - Key: ENVIRONMENT
-          Value: !Ref EBEnvironmentType
+          Value: !Ref EnvironmentType
         - Key: REPO_BRANCH
           Value: !Ref RepoBranch
       
