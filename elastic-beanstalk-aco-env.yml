@@ -104,6 +104,10 @@ Parameters:
       - false
     Default: false
     Description: Set to true to use EC2 spot intance in EB environment, or false for on demmand instances
+  RepoBranch:
+    Description: Repository branch name
+    Type: String
+    Default: testing
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
@@ -321,16 +325,15 @@ Resources:
             OptionName: SENDGRID_API_KEY
             Value: !If [IsProdEnvironment, !Ref SendgridApiKey, !Ref AWS::NoValue]
 
-  CodePipelineRolesStack:
+  CodePipelineStack:
     Type: AWS::CloudFormation::Stack
-    DependsOn: !Ref EBEnvironment
+    DependsOn: EBEnvironment
     Properties:
       TemplateURL: https://atomicoconut.s3-ap-southeast-2.amazonaws.com/infrastructure/nested-stacks/codepipeline-cicd-aco.yml
       Parameters:
-        AppName: !Ref AppName
+        AppName: !Ref EBAppName
         EnvironmentType: !Ref EBEnvironmentType
         RepoBranch: !Ref RepoBranch
-        CodePipelineS3Bucket: !Ref CodePipelineS3Bucket
         RepoName: "maxipaolucci/atomiCoconut"
 
   R53toEbDnsRecord:
