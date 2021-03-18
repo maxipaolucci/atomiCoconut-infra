@@ -10,3 +10,4 @@ Infrastructure resources for atomiCoconut
   or just: >`./upload-all-to-s3.sh` (to upload the all of the above)
 2) Cloudformation: Create a new stack with elastic-beanstalk-aco-env.yml
 2.1) Create all the required parameters in AWS SSM 
+
