@@ -325,6 +325,10 @@ Resources:
           - Namespace: 'aws:elasticbeanstalk:application:environment'
             OptionName: SENDGRID_API_KEY
             Value: !If [IsProdEnvironment, !Ref SendgridApiKey, !Ref AWS::NoValue]
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            # XRAY var. Set to LOG_ERROR to avoid throwing exceptions when your instrumented code attempts to record data when no segment is open
+            OptionName: AWS_XRAY_CONTEXT_MISSING
+            Value: LOG_ERROR
 
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
