@@ -108,6 +108,13 @@ Parameters:
     Description: Repository branch name
     Type: String
     Default: testing
+  EnableNodeJsLogger:
+    Type: String
+    AllowedValues: 
+      - true
+      - false
+    Default: false
+    Description: Set to true to allow NodeJS app to write log files.
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
@@ -329,6 +336,10 @@ Resources:
             # XRAY var. Set to LOG_ERROR to avoid throwing exceptions when your instrumented code attempts to record data when no segment is open
             OptionName: AWS_XRAY_CONTEXT_MISSING
             Value: LOG_ERROR
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            # NodeJS logger
+            OptionName: LOGGER_ENABLED
+            Value: !Ref EnableNodeJsLogger
 
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
