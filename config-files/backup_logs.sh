@@ -70,10 +70,10 @@ touch $LOCK_FILE
 # --- Body --------------------------------------------------------
 
 # capture environment parameter if present
-environment="" # Set to "testing" if you're in testing env
-if [[ ! -z "$environment" ]]; then environment="-$environment"; fi
+environmentName="" # Set to "testing" if you're in testing env
+if [[ ! -z "$environment" ]]; then environmentName="-$environment"; fi
 echo "### Environment: $environment"
 
 
 # upload log file to S3 bucket (sse AES256 encryption and intelligent tiering)
-aws s3 mv ./logs-bkp/* s3://$bucketName/atomiCoconut$environment/logs --sse --storage-class INTELLIGENT_TIERING
+aws s3 mv ./logs-bkp/ s3://$bucketName/atomiCoconut$environmentName/logs/ --recursive --sse --storage-class INTELLIGENT_TIERING
