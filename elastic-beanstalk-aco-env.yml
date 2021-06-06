@@ -115,6 +115,11 @@ Parameters:
       - false
     Default: false
     Description: Set to true to allow NodeJS app to write log files.
+  ElasticSearchUrl:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    # NoEcho: true
+    Default: /maxipaolucci/aco/test/elasticsearch/url
+    Description: Url for elasticsearch
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
@@ -340,6 +345,10 @@ Resources:
             # NodeJS logger
             OptionName: LOGGER_ENABLED
             Value: !Ref EnableNodeJsLogger
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            # NodeJS logger
+            OptionName: ELASTIC_SEARCH_URL
+            Value: !Ref ElasticSearchUrl
 
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
