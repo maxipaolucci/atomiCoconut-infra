@@ -223,7 +223,7 @@ Resources:
         ApplicationName: !Ref EBApplication
         Description: !Sub 'AWS Elastic Beanstalk Environment for ${EBEnvironmentType}'
         EnvironmentName: !Join [ '-', [!Ref EBAppName, env, !Ref EBEnvironmentType]]
-        SolutionStackName: "64bit Amazon Linux 2 v3.4.0 running Docker"
+        SolutionStackName: "64bit Amazon Linux 2 v3.4.2 running Docker"
         # SolutionStackName: "64bit Amazon Linux 2018.03 v2.22.0 running Multi-container Docker 19.03.6-ce (Generic)"
         VersionLabel: !Ref EBInitialAppVersion
         OptionSettings:
