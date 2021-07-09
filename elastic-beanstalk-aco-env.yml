@@ -115,6 +115,10 @@ Parameters:
       - false
     Default: false
     Description: Set to true to allow NodeJS app to write log files.
+  NodeJSLogSize:
+    Description: NodeJS app log file size (for rotation)
+    Type: String
+    Default: 10k
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
@@ -340,6 +344,10 @@ Resources:
             # NodeJS logger
             OptionName: LOGGER_ENABLED
             Value: !Ref EnableNodeJsLogger
+          - Namespace: 'aws:elasticbeanstalk:application:environment'
+            # NodeJS log file size
+            OptionName: LOG_SIZE
+            Value: !Ref NodeJSLogSize
 
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
