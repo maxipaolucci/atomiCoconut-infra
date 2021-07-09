@@ -115,11 +115,6 @@ Parameters:
       - false
     Default: false
     Description: Set to true to allow NodeJS app to write log files.
-  ElasticSearchUrl:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    # NoEcho: true
-    Default: /maxipaolucci/aco/test/elasticsearch/url
-    Description: Url for elasticsearch
 
 Conditions: 
   IsProdEnvironment: !Equals [ !Ref EBEnvironmentType, production ]
@@ -228,7 +223,7 @@ Resources:
         ApplicationName: !Ref EBApplication
         Description: !Sub 'AWS Elastic Beanstalk Environment for ${EBEnvironmentType}'
         EnvironmentName: !Join [ '-', [!Ref EBAppName, env, !Ref EBEnvironmentType]]
-        SolutionStackName: "64bit Amazon Linux 2 v3.2.0 running Docker"
+        SolutionStackName: "64bit Amazon Linux 2 v3.4.0 running Docker"
         # SolutionStackName: "64bit Amazon Linux 2018.03 v2.22.0 running Multi-container Docker 19.03.6-ce (Generic)"
         VersionLabel: !Ref EBInitialAppVersion
         OptionSettings:
@@ -345,10 +340,6 @@ Resources:
             # NodeJS logger
             OptionName: LOGGER_ENABLED
             Value: !Ref EnableNodeJsLogger
-          - Namespace: 'aws:elasticbeanstalk:application:environment'
-            # NodeJS logger
-            OptionName: ELASTIC_SEARCH_URL
-            Value: !Ref ElasticSearchUrl
 
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
