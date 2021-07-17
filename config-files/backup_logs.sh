@@ -76,4 +76,5 @@ echo "### Environment: $environment"
 
 
 # upload log file to S3 bucket (sse AES256 encryption and intelligent tiering)
-aws s3 mv ./logs-bkp/ s3://$bucketName/atomiCoconut$environmentName/logs/ --recursive --sse --storage-class INTELLIGENT_TIERING
+aws s3 mv ./logs-bkp/server/ s3://$bucketName/atomiCoconut$environmentName/logs/server/ --recursive --sse --storage-class INTELLIGENT_TIERING
+aws s3 mv ./logs-bkp/nginx/ s3://$bucketName/atomiCoconut$environmentName/logs/nginx/ --recursive --sse --storage-class INTELLIGENT_TIERING
